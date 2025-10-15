@@ -2,7 +2,7 @@
 
 **Created by Farrah**
 
-Kids can turn their favorite bedtime boods into awesome 90s arcade-style games using AI!
+Kids can turn their favorite bedtime books into awesome 90s arcade-style games using AI!
 
 ## ✨ What It Does
 
