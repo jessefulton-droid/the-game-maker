@@ -74,7 +74,7 @@ export const GenerationScreen: React.FC<Props> = ({ navigation, route }) => {
     const mockGeneratedGame = {
       design: gameDesign,
       code: '// Game code would be here',
-      htmlWrapper: '<html>Game HTML</html>',
+      htmlWrapper: '', // Empty so it falls back to template
       generatedAt: new Date(),
       version: 1,
     };

@@ -30,9 +30,16 @@ export const GameWebView: React.FC<GameWebViewProps> = ({ html, onMessage }) => 
         allowFileAccess={true}
         allowUniversalAccessFromFileURLs={true}
         mixedContentMode="always"
+        onLoadStart={() => {
+          console.log('WebView: Starting to load game...');
+        }}
+        onLoadEnd={() => {
+          console.log('WebView: Game loaded successfully!');
+        }}
         onError={(syntheticEvent) => {
           const { nativeEvent } = syntheticEvent;
           console.error('WebView error:', nativeEvent);
+          console.error('HTML preview:', html?.substring(0, 200));
         }}
         onHttpError={(syntheticEvent) => {
           const { nativeEvent } = syntheticEvent;

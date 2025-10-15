@@ -19,8 +19,14 @@ export const GameScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showControls, setShowControls] = useState(true);
 
   // For MVP, use a template game since we don't have real generation yet
-  const template = getTemplate(generatedGame.design.gameType);
+  const gameType = generatedGame.design.gameType === 'custom' ? 'platformer' : generatedGame.design.gameType;
+  const template = getTemplate(gameType);
   const gameHtml = generatedGame.htmlWrapper || generateGameHTML(template);
+  
+  // Debug logging
+  console.log('Game type:', generatedGame.design.gameType);
+  console.log('Using htmlWrapper?', !!generatedGame.htmlWrapper);
+  console.log('HTML length:', gameHtml?.length || 0);
 
   const handleGameMessage = (message: string) => {
     console.log('Game message:', message);
