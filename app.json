@@ -1,30 +1,60 @@
 {
   "expo": {
-    "name": "the-game-maker",
+    "name": "The Game Maker",
     "slug": "the-game-maker",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#4CAF50"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.farrah.thegamemaker",
+      "infoPlist": {
+        "NSCameraUsageDescription": "We need camera access to take pictures of your books",
+        "NSMicrophoneUsageDescription": "We need microphone access for voice input",
+        "NSSpeechRecognitionUsageDescription": "We need speech recognition to understand your voice"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#4CAF50"
       },
+      "package": "com.farrah.thegamemaker",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow The Game Maker to access your camera to take pictures of books"
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow The Game Maker to access your microphone for voice input"
+        }
+      ]
+    ],
+    "extra": {
+      "ANTHROPIC_API_KEY": ""
     }
   }
 }

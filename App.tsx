@@ -1,20 +1,60 @@
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { RootStackParamList } from './app/types';
+
+// Import screens
+import { HomeScreen } from './app/screens/HomeScreen';
+import { CameraScreen } from './app/screens/CameraScreen';
+import { BookDiscussionScreen } from './app/screens/BookDiscussionScreen';
+import { GameDesignScreen } from './app/screens/GameDesignScreen';
+import { GenerationScreen } from './app/screens/GenerationScreen';
+import { GameScreen } from './app/screens/GameScreen';
+import { FeedbackScreen } from './app/screens/FeedbackScreen';
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
+    <NavigationContainer>
       <StatusBar style="auto" />
-    </View>
+      <Stack.Navigator
+        initialRouteName="Home"
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen 
+          name="Home" 
+          component={HomeScreen} 
+        />
+        <Stack.Screen 
+          name="Camera" 
+          component={CameraScreen}
+        />
+        <Stack.Screen 
+          name="BookDiscussion" 
+          component={BookDiscussionScreen}
+        />
+        <Stack.Screen 
+          name="GameDesign" 
+          component={GameDesignScreen}
+        />
+        <Stack.Screen 
+          name="Generation" 
+          component={GenerationScreen}
+        />
+        <Stack.Screen 
+          name="Game" 
+          component={GameScreen}
+        />
+        <Stack.Screen 
+          name="Feedback" 
+          component={FeedbackScreen}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
