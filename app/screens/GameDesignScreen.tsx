@@ -56,65 +56,118 @@ export const GameDesignScreen: React.FC<Props> = ({ navigation, route }) => {
     setInputText('');
     setIsAgentTyping(true);
 
-    // TODO: Integrate with Game Designer agent
-    setTimeout(() => {
-      const responses = [
-        "Great choice! What should the player collect in the game?",
-        "Cool! What obstacles or enemies should they avoid?",
-        "Love it! Should there be any power-ups or special abilities?",
-        "Perfect! I think we have an amazing game design. Ready to build it?",
-      ];
+    try {
+      // Real agent integration - Process response with Game Designer
+      const { getOrchestrator } = await import('../services/agents/orchestrator');
+      const orchestrator = await getOrchestrator();
       
-      const responseIndex = Math.min(messages.length / 2, responses.length - 1);
-      const response = responses[Math.floor(responseIndex)];
+      console.log('🤖 Processing game design response...');
+      const result = await orchestrator.processGameDesignResponse(text);
       
-      addMessage('agent', response, 'game-designer');
+      if (result.success && result.agentMessage) {
+        console.log('✅ Game Designer response received');
+        addMessage('agent', result.agentMessage, 'game-designer');
+      } else {
+        addMessage('agent', 'That sounds great! What else should we add?', 'game-designer');
+      }
+      
       setIsAgentTyping(false);
       
-      if (messages.length >= 6) {
+      // Check if design is complete
+      if (result.isComplete) {
+        console.log('✅ Game design complete!');
         setDesignComplete(true);
       }
-    }, 2000);
+    } catch (error) {
+      console.error('❌ Error processing design:', error);
+      addMessage('agent', 'Let me think about that differently...', 'game-designer');
+      setIsAgentTyping(false);
+    }
   };
 
   const handleVoiceTranscription = (text: string) => {
     handleSend(text);
   };
 
-  const handleBuildGame = () => {
-    // TODO: Get game design from orchestrator
-    const mockGameDesign = {
-      gameTitle: `${bookAnalysis.book.title} - The Game`,
-      gameType: 'platformer' as const,
-      objective: 'Collect all the tacos while avoiding spicy salsa!',
-      mechanics: [
-        { name: 'Jump', description: 'Jump over obstacles', implementation: 'Arcade physics' },
-        { name: 'Collect', description: 'Gather tacos', implementation: 'Overlap detection' },
-      ],
-      characters: [
-        { name: 'Dragon', role: 'player' as const, abilities: ['jump', 'run'], appearance: 'Red dragon' },
-      ],
-      collectibles: [
-        { name: 'Taco', points: 10, appearance: 'Yellow taco' },
-      ],
-      obstacles: [
-        { name: 'Spicy Salsa', behavior: 'Static hazard', appearance: 'Red puddle' },
-      ],
-      powerUps: [],
-      levelDesign: {
-        layout: 'Linear platformer level',
-        difficulty: 'easy' as const,
-        estimatedDuration: '3-5 minutes',
-      },
-      visualStyle: {
-        colorScheme: ['#FF6B6B', '#4ECDC4', '#FFE66D'],
-        artStyle: 'Colorful geometric shapes',
-        animations: ['jump', 'collect', 'idle'],
-      },
-      designNotes: messages.map(m => m.content),
-    };
-
-    navigation.navigate('Generation', { gameDesign: mockGameDesign });
+  const handleBuildGame = async () => {
+    try {
+      // Get game design from orchestrator
+      const { getOrchestrator } = await import('../services/agents/orchestrator');
+      const orchestrator = await getOrchestrator();
+      
+      console.log('🎨 Getting game design...');
+      const gameDesign = await orchestrator.getGameDesign();
+      
+      if (gameDesign) {
+        console.log('✅ Game design retrieved');
+        navigation.navigate('Generation', { gameDesign });
+      } else {
+        // Fallback design if needed
+        const fallbackDesign = {
+          gameTitle: `${bookAnalysis.book.title} - The Game`,
+          gameType: 'platformer' as const,
+          objective: 'Complete the adventure!',
+          mechanics: [
+            { name: 'Move', description: 'Move and jump', implementation: 'Arcade physics' },
+          ],
+          characters: [
+            { name: 'Hero', role: 'player' as const, abilities: ['jump', 'run'], appearance: 'Brave hero' },
+          ],
+          collectibles: [
+            { name: 'Star', points: 10, appearance: 'Golden star' },
+          ],
+          obstacles: [
+            { name: 'Obstacle', behavior: 'Static', appearance: 'Block' },
+          ],
+          powerUps: [],
+          levelDesign: {
+            layout: 'Simple platformer',
+            difficulty: 'easy' as const,
+            estimatedDuration: '2-3 minutes',
+          },
+          visualStyle: {
+            colorScheme: ['#FF6B6B', '#4ECDC4', '#FFE66D'],
+            artStyle: 'Colorful',
+            animations: ['jump', 'collect'],
+          },
+          designNotes: messages.map(m => m.content),
+        };
+        navigation.navigate('Generation', { gameDesign: fallbackDesign });
+      }
+    } catch (error) {
+      console.error('❌ Error getting game design:', error);
+      // Navigate with fallback
+      const fallbackDesign = {
+        gameTitle: `${bookAnalysis.book.title} - The Game`,
+        gameType: 'platformer' as const,
+        objective: 'Complete the adventure!',
+        mechanics: [
+          { name: 'Move', description: 'Move and jump', implementation: 'Arcade physics' },
+        ],
+        characters: [
+          { name: 'Hero', role: 'player' as const, abilities: ['jump', 'run'], appearance: 'Brave hero' },
+        ],
+        collectibles: [
+          { name: 'Star', points: 10, appearance: 'Golden star' },
+        ],
+        obstacles: [
+          { name: 'Obstacle', behavior: 'Static', appearance: 'Block' },
+        ],
+        powerUps: [],
+        levelDesign: {
+          layout: 'Simple platformer',
+          difficulty: 'easy' as const,
+          estimatedDuration: '2-3 minutes',
+        },
+        visualStyle: {
+          colorScheme: ['#FF6B6B', '#4ECDC4', '#FFE66D'],
+          artStyle: 'Colorful',
+          animations: ['jump', 'collect'],
+        },
+        designNotes: messages.map(m => m.content),
+      };
+      navigation.navigate('Generation', { gameDesign: fallbackDesign });
+    }
   };
 
   return (

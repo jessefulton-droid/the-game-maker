@@ -51,22 +51,34 @@ export const CameraScreen: React.FC<Props> = ({ navigation }) => {
 
     setIsProcessing(true);
     
-    // TODO: Integrate with orchestrator to identify book
-    // For now, simulate processing
-    setTimeout(() => {
+    try {
+      // Real agent integration - Identify book using Claude Vision
+      const { getOrchestrator } = await import('../services/agents/orchestrator');
+      const orchestrator = await getOrchestrator();
+      
+      console.log('🤖 Starting book identification...');
+      const result = await orchestrator.startBookDiscussion(capturedImage);
+      
       setIsProcessing(false);
       
-      // Mock book info for testing
-      const mockBookInfo = {
-        title: 'Dragons Love Tacos',
-        author: 'Adam Rubin',
-        coverImageUri: capturedImage,
-        identifiedAt: new Date(),
-      };
-      
-      // Navigate to book discussion
-      navigation.navigate('BookDiscussion', { bookInfo: mockBookInfo });
-    }, 2000);
+      if (result.success && result.bookInfo) {
+        console.log('✅ Book identified:', result.bookInfo.title);
+        navigation.navigate('BookDiscussion', { bookInfo: result.bookInfo });
+      } else {
+        Alert.alert('Error', 'Could not identify the book. Please try again with a clearer photo.');
+        setCapturedImage(null);
+      }
+    } catch (error) {
+      console.error('❌ Error identifying book:', error);
+      setIsProcessing(false);
+      Alert.alert(
+        'Error',
+        'Failed to process image. Please check your API key and try again.',
+        [
+          { text: 'OK', onPress: () => setCapturedImage(null) }
+        ]
+      );
+    }
   };
 
   if (!permission) {

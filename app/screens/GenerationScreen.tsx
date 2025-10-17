@@ -69,22 +69,48 @@ export const GenerationScreen: React.FC<Props> = ({ navigation, route }) => {
     };
   }, []);
 
-  const completeGeneration = () => {
-    // TODO: Get generated game from orchestrator
-    const mockGeneratedGame = {
-      design: gameDesign,
-      code: '// Game code would be here',
-      htmlWrapper: '', // Empty so it falls back to template
-      generatedAt: new Date(),
-      version: 1,
-    };
-
-    setProgress(100);
-    setCurrentStep('✨ Your game is ready!');
-    
-    setTimeout(() => {
-      navigation.navigate('Game', { generatedGame: mockGeneratedGame });
-    }, 1000);
+  const completeGeneration = async () => {
+    try {
+      // Real agent integration - Generate game code
+      const { getOrchestrator } = await import('../services/agents/orchestrator');
+      const orchestrator = await getOrchestrator();
+      
+      console.log('🎮 Starting code generation...');
+      setCurrentStep('🤖 AI is writing game code...');
+      
+      const result = await orchestrator.startCodeGeneration();
+      
+      if (result.success && result.generatedGame) {
+        console.log('✅ Game code generated successfully!');
+        setProgress(100);
+        setCurrentStep('✨ Your game is ready!');
+        
+        setTimeout(() => {
+          navigation.navigate('Game', { generatedGame: result.generatedGame });
+        }, 1000);
+      } else {
+        throw new Error('Code generation failed');
+      }
+    } catch (error) {
+      console.error('❌ Error generating game:', error);
+      
+      // Fallback to template-based game
+      console.log('⚠️ Falling back to template game...');
+      const fallbackGame = {
+        design: gameDesign,
+        code: '// Using template',
+        htmlWrapper: '', // Empty so it falls back to template
+        generatedAt: new Date(),
+        version: 1,
+      };
+      
+      setProgress(100);
+      setCurrentStep('✨ Your game is ready!');
+      
+      setTimeout(() => {
+        navigation.navigate('Game', { generatedGame: fallbackGame });
+      }, 1000);
+    }
   };
 
   const handleTimeout = () => {

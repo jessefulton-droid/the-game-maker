@@ -1,5 +1,7 @@
 import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
+import * as FileSystem from 'expo-file-system';
+import Constants from 'expo-constants';
 
 // Request permissions for audio recording
 export const requestAudioPermissions = async (): Promise<boolean> => {
@@ -50,41 +52,68 @@ export const stopRecording = async (
   }
 };
 
-// Convert audio to text using a speech-to-text service
-// For MVP, we'll use a simple approach. In production, integrate with a service like:
-// - OpenAI Whisper API
-// - Google Cloud Speech-to-Text
-// - Rev.ai
+// Convert audio to text using OpenAI Whisper API
 export const transcribeAudio = async (audioUri: string): Promise<string> => {
   try {
-    // TODO: Integrate with actual speech-to-text service
-    // For now, this is a placeholder that would need implementation
+    // Get OpenAI API key from environment
+    const apiKey = Constants.expoConfig?.extra?.OPENAI_API_KEY || 
+                   process.env.OPENAI_API_KEY;
     
-    // Example implementation with Whisper API:
-    // const formData = new FormData();
-    // formData.append('file', {
-    //   uri: audioUri,
-    //   type: 'audio/m4a',
-    //   name: 'recording.m4a',
-    // });
-    // formData.append('model', 'whisper-1');
-    //
-    // const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${OPENAI_API_KEY}`,
-    //   },
-    //   body: formData,
-    // });
-    //
-    // const data = await response.json();
-    // return data.text;
+    if (!apiKey || apiKey === 'your_openai_key_here') {
+      console.warn('⚠️ OPENAI_API_KEY not configured. Voice input will not work.');
+      throw new Error('OpenAI API key not configured. Please add it to your .env file.');
+    }
+
+    console.log('🎤 Starting Whisper transcription...');
+
+    // Create FormData for the API request
+    const formData = new FormData();
     
-    console.warn('Speech-to-text not yet implemented. Please add your preferred service.');
-    return '[Transcription would appear here - please implement speech-to-text service]';
+    // Append the audio file
+    formData.append('file', {
+      uri: audioUri,
+      type: 'audio/m4a',
+      name: 'recording.m4a',
+    } as any);
+    
+    // Specify the Whisper model
+    formData.append('model', 'whisper-1');
+    
+    // Optional: Specify language for better accuracy
+    formData.append('language', 'en');
+
+    // Call OpenAI Whisper API
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error?.message || `HTTP ${response.status}`;
+      console.error('❌ Whisper API error:', errorMessage);
+      throw new Error(`Whisper API error: ${errorMessage}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ Transcription complete:', data.text);
+    
+    return data.text || '[No transcription available]';
   } catch (error) {
-    console.error('Error transcribing audio:', error);
-    throw error;
+    console.error('❌ Error transcribing audio:', error);
+    
+    // Provide user-friendly error message
+    if (error instanceof Error) {
+      if (error.message.includes('API key')) {
+        throw new Error('Voice input is not configured. Please add your OpenAI API key.');
+      }
+      throw error;
+    }
+    
+    throw new Error('Failed to transcribe audio. Please try again.');
   }
 };
 

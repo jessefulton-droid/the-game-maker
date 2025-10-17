@@ -55,51 +55,87 @@ export const BookDiscussionScreen: React.FC<Props> = ({ navigation, route }) => 
     setInputText('');
     setIsAgentTyping(true);
 
-    // TODO: Integrate with Story Analyst agent
-    // For now, simulate agent response
-    setTimeout(() => {
-      const responses = [
-        "That sounds awesome! What did you like most about that part of the story?",
-        "Wow, that's so cool! What did you learn from this book?",
-        "I love that! Were there any characters that were your favorites?",
-        "Great! Now I have a really good understanding of what makes this book special to you. Ready to turn it into a game?",
-      ];
+    try {
+      // Real agent integration - Process response with Story Analyst
+      const { getOrchestrator } = await import('../services/agents/orchestrator');
+      const orchestrator = await getOrchestrator();
       
-      const responseIndex = Math.min(messages.length / 2, responses.length - 1);
-      const response = responses[Math.floor(responseIndex)];
+      console.log('🤖 Processing book discussion response...');
+      const result = await orchestrator.processBookDiscussionResponse(text);
       
-      addMessage('agent', response, 'story-analyst');
+      if (result.success && result.agentMessage) {
+        console.log('✅ Agent response received');
+        addMessage('agent', result.agentMessage, 'story-analyst');
+      } else {
+        // Fallback response if something goes wrong
+        addMessage('agent', 'That\'s interesting! Tell me more about that.', 'story-analyst');
+      }
+      
       setIsAgentTyping(false);
       
-      // Check if conversation is complete
-      if (messages.length >= 6) {
+      // Check if analysis is complete
+      if (result.isComplete) {
+        console.log('✅ Book discussion complete!');
         setConversationComplete(true);
       }
-    }, 2000);
+    } catch (error) {
+      console.error('❌ Error processing response:', error);
+      addMessage('agent', 'Sorry, I had trouble understanding. Can you try again?', 'story-analyst');
+      setIsAgentTyping(false);
+    }
   };
 
   const handleVoiceTranscription = (text: string) => {
     handleSend(text);
   };
 
-  const handleContinue = () => {
-    // TODO: Get book analysis from orchestrator
-    const mockBookAnalysis = {
-      book: bookInfo,
-      plotSummary: "A story about dragons who love tacos but can't handle spicy salsa.",
-      themes: ['friendship', 'preferences', 'problem-solving'],
-      characters: [
-        { name: 'Dragons', description: 'Taco-loving dragons', role: 'protagonists', traits: ['friendly', 'hungry'] },
-      ],
-      keyMoments: ['Dragons eat tacos', 'Spicy salsa causes problems', 'Dragons breathe fire'],
-      gameElements: [
-        { type: 'collectible' as const, name: 'Tacos', description: 'Yummy tacos to collect', storyConnection: 'Dragons love them' },
-        { type: 'obstacle' as const, name: 'Spicy Salsa', description: 'Makes dragons breathe fire', storyConnection: 'Main conflict' },
-      ],
-      discussionNotes: messages.map(m => m.content),
-    };
-
-    navigation.navigate('GameDesign', { bookAnalysis: mockBookAnalysis });
+  const handleContinue = async () => {
+    try {
+      // Get book analysis from orchestrator
+      const { getOrchestrator } = await import('../services/agents/orchestrator');
+      const orchestrator = await getOrchestrator();
+      
+      console.log('📊 Getting book analysis...');
+      const bookAnalysis = await orchestrator.getBookAnalysis();
+      
+      if (bookAnalysis) {
+        console.log('✅ Book analysis complete');
+        navigation.navigate('GameDesign', { bookAnalysis });
+      } else {
+        // Fallback to basic analysis if needed
+        const fallbackAnalysis = {
+          book: bookInfo,
+          plotSummary: "A wonderful story ready to become a game!",
+          themes: ['adventure', 'creativity'],
+          characters: [
+            { name: 'Hero', description: 'Main character', role: 'protagonists' as const, traits: ['brave', 'clever'] },
+          ],
+          keyMoments: ['Beginning', 'Middle', 'End'],
+          gameElements: [
+            { type: 'collectible' as const, name: 'Stars', description: 'Collectible items', storyConnection: 'Progress' },
+          ],
+          discussionNotes: messages.map(m => m.content),
+        };
+        navigation.navigate('GameDesign', { bookAnalysis: fallbackAnalysis });
+      }
+    } catch (error) {
+      console.error('❌ Error getting book analysis:', error);
+      // Navigate anyway with fallback
+      const fallbackAnalysis = {
+        book: bookInfo,
+        plotSummary: "A wonderful story ready to become a game!",
+        themes: ['adventure', 'creativity'],
+        characters: [
+          { name: 'Hero', description: 'Main character', role: 'protagonists' as const, traits: ['brave', 'clever'] },
+        ],
+        keyMoments: ['Beginning', 'Middle', 'End'],
+        gameElements: [
+          { type: 'collectible' as const, name: 'Stars', description: 'Collectible items', storyConnection: 'Progress' },
+        ],
+        discussionNotes: messages.map(m => m.content),
+      };
+      navigation.navigate('GameDesign', { bookAnalysis: fallbackAnalysis });
+    }
   };
 
   return (
